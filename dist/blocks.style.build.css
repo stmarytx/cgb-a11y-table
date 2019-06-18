@@ -4,3 +4,25 @@
  * Can include things like variables and mixins
  * that are used across the project.
 */
+.wp-block-cgb-a11y-table {
+  border-bottom: 1px solid #777;
+  table-layout: fixed;
+  border-collapse: collapse;
+  border-spacing: 0; }
+  .wp-block-cgb-a11y-table caption, .wp-block-cgb-a11y-table td, .wp-block-cgb-a11y-table th, .wp-block-cgb-a11y-table tfoot {
+    border: 1px solid #777;
+    border-bottom: none;
+    text-align: left; }
+  .wp-block-cgb-a11y-table caption, .wp-block-cgb-a11y-table tfoot {
+    background: #fff; }
+  .wp-block-cgb-a11y-table th {
+    background: #ddd; }
+  .wp-block-cgb-a11y-table td, .wp-block-cgb-a11y-table th {
+    height: 2em; }
+  .wp-block-cgb-a11y-table tbody {
+    border: none; }
+  .wp-block-cgb-a11y-table tbody tr:nth-child(even) {
+    background: #eee; }
+  .wp-block-cgb-a11y-table tfoot td {
+    font-style: italic;
+    font-weight: normal; }

@@ -4,3 +4,13 @@
  * Can include things like variables and mixins
  * that are used across the project.
 */
+.wp-block-cgb-a11y-table {
+  width: 100%; }
+  .wp-block-cgb-a11y-table caption, .wp-block-cgb-a11y-table th, .wp-block-cgb-a11y-table td {
+    padding: 3px; }
+
+.components-icon-button:not(:disabled):focus, .components-icon-button:not(:disabled):hover {
+  cursor: pointer; }
+
+.is-hidden {
+  display: none; }

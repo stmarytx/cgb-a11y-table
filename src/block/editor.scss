@@ -1,0 +1,13 @@
+// A11y table block editor styles
+.wp-block-cgb-a11y-table {
+    width:100%;
+    caption, th, td {
+        padding: 3px;
+    }
+}
+.components-icon-button:not(:disabled):focus, .components-icon-button:not(:disabled):hover {
+    cursor:pointer;
+}
+.is-hidden {
+    display:none;
+}

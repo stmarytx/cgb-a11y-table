@@ -1,0 +1,31 @@
+// A11y table block styles for both editor and front end
+.wp-block-cgb-a11y-table {
+    border-bottom:1px solid #777;
+    table-layout:fixed;
+    border-collapse:collapse;
+    border-spacing:0;
+    caption, td, th, tfoot {
+        border:1px solid #777;
+        border-bottom:none;
+        text-align:left;
+    }
+    caption, tfoot {
+        background:#fff;
+    }
+    th {
+        background:#ddd;
+    }
+    td, th {
+        height:2em;
+    }
+    tbody {
+        border:none;
+    }
+    tbody tr:nth-child(even) {
+        background:#eee;
+    }
+    tfoot td {
+        font-style:italic;
+        font-weight:normal;
+    }
+}
