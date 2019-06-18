@@ -41,6 +41,18 @@ registerBlockType("cgb/a11y-table", {
             source: 'text',
             selector: 'tfoot td'
         },
+        dataHead: {
+            type: 'array',
+            source: 'query',
+            default: [],
+            selector: 'th[scope="col"]',
+            query: {
+                content: {
+                    type: 'string',
+                    source: 'html'
+                }
+            }
+        },
         numCols: {
             type: 'string',
             default: '2'
@@ -57,6 +69,14 @@ registerBlockType("cgb/a11y-table", {
             type: 'boolean',
             default: true
         },
+        useColHeadings: {
+            type: 'boolean',
+            default: true
+        },
+        useRowHeadings: {
+            type: 'boolean',
+            default: false
+        },
         useFooter: {
             type: 'boolean',
             default: false
@@ -64,7 +84,8 @@ registerBlockType("cgb/a11y-table", {
     },
     //////////////////// EDIT ////////////////////
     edit: props => {
-        const { attributes: { dataBody, dataCaption, dataFooter, showTable, useCaption, useFooter }, className, setAttributes } = props;
+        console.log('Edit Attributes: ',props.attributes);
+        const { attributes: { dataBody, dataCaption, dataFooter, dataHead, showTable, useCaption, useColHeadings, useFooter, useRowHeadings }, className, setAttributes } = props;
         let numCols = parseInt(props.attributes.numCols, 10);
         let numRows = parseInt(props.attributes.numRows, 10);
         // Caption
@@ -85,11 +106,53 @@ registerBlockType("cgb/a11y-table", {
                 setCursor(evt);
             };
         }
+        // Row Counter for aria labels - start at 1
+        let ariaLabel, rowCounter = 1;
+        // Table Head
+        let tableHead, headClass = 'is-hidden';
+        if(showTable) {
+            headClass = '';
+        }
+        const tableHeadData = dataHead
+        .map(function(cell, colIndex) {
+            ariaLabel = 'Row '+rowCounter+' Column '+(colIndex+1);
+            let currentTh = <th
+                aria-label={ ariaLabel }
+                scope='col'
+                contenteditable='true'
+            >
+                { cell.content }
+            </th>;
+            currentTh.props.onInput = function(evt) {
+                // Copy the dataHead
+                let newHead = JSON.parse(JSON.stringify(dataHead));
+                // Create a new cell
+                let newTh = { content: evt.target.textContent };
+                // Replace the old cell with the new cell
+                newHead.splice(colIndex, 1, newTh);
+                // Save the dataHead attribute
+                props.setAttributes({ dataHead: newHead });
+                // Move the cursor back where it was
+                setCursor(evt);
+            };
+            return currentTh;
+        });
+        if(tableHeadData.length) {
+            tableHead = <thead className={ headClass }><tr>{ tableHeadData }</tr></thead>;
+        } else {
+            // If there is no table head, take rowCounter back down to 0, because Table Body has to increment it before output
+            rowCounter--;
+        }
         // Table Body
         let tableBody, formClass = '', tableBodyData = dataBody
         .map(function(rows, rowIndex) {
+            rowCounter++;
             let rowCells = rows.bodyCells.map(function(cell, colIndex) {
+                // Set up options
+                ariaLabel = 'Row '+rowCounter+' Column '+(colIndex+1);
+                let cellType = 'd';
                 let cellOptions = {
+                    'aria-label': ariaLabel,
                     contenteditable: 'true',
                     onInput: (evt) => {
                         // Copy the dataBody
@@ -106,27 +169,34 @@ registerBlockType("cgb/a11y-table", {
                         setCursor(evt);
                     }
                 };
+                if(useRowHeadings == true && colIndex == 0) { cellType = 'h'; cellOptions.scope = 'row'; }
+                // Create the element - either a TD or a TH
                 let currentBodyCell = el(
-                    'td',
+                    `t${cellType}`,
                     cellOptions,
                     cell.content
-                );
+                )
                 return currentBodyCell;
             });
             return (<tr>{rowCells}</tr>);
         });
         if(tableBodyData.length) {      
             tableBody = <tbody>{ tableBodyData }</tbody>;
+			formClass = 'is-hidden';
         }
         // Table Footer
         var tableFooter, footerClass = 'is-hidden';
         if(showTable) {
             footerClass = '';
-            formClass = 'is-hidden';
+        }
+        // Calculate colspan: if useRowHeadings is true, there should be 1 extra column
+        let totalCols = numCols;
+        if(useRowHeadings == true) {
+            totalCols++;
         }
         if(useFooter == true) {
             let tableFooterTd = <td
-                colspan={ numCols }
+                colspan={ totalCols }
                 className={ footerClass }
                 contenteditable='true'
             >
@@ -143,6 +213,7 @@ registerBlockType("cgb/a11y-table", {
             <div>
                 <table className={ className }>
                     { tableCaption }
+                    { tableHead }
                     { tableBody }
                     { tableFooter }
                 </table>
@@ -159,6 +230,21 @@ registerBlockType("cgb/a11y-table", {
                         />
                     </div>
                     <div>
+                        <label for='useColHeadings'>{ __('Add Column Headings') }</label>
+                        <input
+                            type='checkbox'
+                            id='useColHeadings'
+                            checked={ useColHeadings }
+                            onChange={ function(evt) {
+                                if(evt.target.checked == true) {
+                                    props.setAttributes({ useColHeadings: true });
+                                } else {
+                                    props.setAttributes({ useColHeadings: false });
+                                }
+                            }}
+                        />
+                    </div>
+                    <div>
                         <label for='numCols'>{ __('Columns') }</label>
                         <input
                             type='number'
@@ -168,6 +254,21 @@ registerBlockType("cgb/a11y-table", {
                             step='1'
                             pattern='[0-9]*'
                             onChange={ (evt) => props.setAttributes({ numCols: evt.target.value }) }
+                        />
+                    </div>
+                    <div>
+                        <label for='useRowHeadings'>{ __('Add Row Headings') }</label>
+                        <input
+                            type='checkbox'
+                            id='useRowHeadings'
+                            checked={ useRowHeadings }
+                            onChange={ function(evt) {
+                                if(evt.target.checked == true) {
+                                    props.setAttributes({ useRowHeadings: true });
+                                } else {
+                                    props.setAttributes({ useRowHeadings: false });
+                                }
+                            }}
                         />
                     </div>
                     <div>
@@ -206,17 +307,33 @@ registerBlockType("cgb/a11y-table", {
             evt.preventDefault();
             // Only build the table and hide the form if there are rows and columns
             if(numCols > 0 && numRows > 0) {
+                // Number of rows will always be numRows, because if useColHeadings is true, that extra row will be in the <thead>, not the <tbody>
+                // But, number of columns will vary: if useRowHeadings is true, there should be 1 extra column
+                // totalCols is used to build both the thead attribute array and the tbody attribute array
+                let totalCols = numCols;
+                if(useRowHeadings == true) {
+                    totalCols++;
+                }
+                // Build the thead attribute array
+                let newHead = [];
+                // If useColHeadings is true, add placeholders for the THs. If not, add nothing, because there should not be a thead at all.
+                if(useColHeadings == true) {
+                    for(var i = 0; i < totalCols; i++) {
+                        newHead[i] = { content: '' };
+                    }
+                }
                 // Build the tbody attribute array
                 let newBody = [];
                 for(var row = 0; row < numRows; row++) {
                     let thisRow = { bodyCells: [] };
-                    for(var col = 0; col < numCols; col++) {
+                    for(var col = 0; col < totalCols; col++) {
                         thisRow.bodyCells[col] = { content: '' };
                     }
                     newBody[row] = thisRow;
                 }
                 // Save atts
                 props.setAttributes({
+                    dataHead: newHead,
                     dataBody: newBody,
                     showTable: true
                 });
@@ -241,23 +358,35 @@ registerBlockType("cgb/a11y-table", {
     },
     //////////////////// SAVE ////////////////////
     save: props => {
-        const { attributes: { dataBody, dataCaption, dataFooter, useCaption, useFooter }, className } = props;
+        const { attributes: { dataBody, dataCaption, dataFooter, dataHead, useCaption, useColHeadings, useFooter, useRowHeadings }, className } = props;
         let numCols = parseInt(props.attributes.numCols, 10);
         let numRows = parseInt(props.attributes.numRows, 10);
         // Caption
-        var tableCaption;
+        let tableCaption;
         if(useCaption === true) {
             tableCaption = <caption>{ dataCaption }</caption>
         }
+        // Table Head
+        let tableHead;
+        if(useColHeadings == true) {
+            const tableHeadData = dataHead.map(function(cell, colIndex) {
+                return (
+                    <th scope='col'>{ cell.content.trim(' ') }</th>
+                );
+            });
+            if(tableHeadData.length) {
+                tableHead = <thead><tr>{ tableHeadData }</tr></thead>;
+            }
+        }
+        // Table Body
         let tableBody, tableBodyData = dataBody
         .map(function(rows) {
-            let rowCells = rows.bodyCells.map(function(cell) {
-                let currentBodyCell = el(
-                    'td',
-                    '',
-                    cell.content.trim(' ')
-                );
-                return currentBodyCell;
+            let rowCells = rows.bodyCells.map(function(cell, colIndex) {
+                if(useRowHeadings == true && colIndex == 0) {
+                    return <th scope='row'>{ cell.content.trim(' ') }</th>
+                } else {
+                    return <td>{ cell.content.trim(' ') }</td>
+                }
             });
             return (<tr>{rowCells}</tr>);
         });
@@ -266,12 +395,18 @@ registerBlockType("cgb/a11y-table", {
         }
         // Table Footer
         let tableFooter;
+        // Calculate colspan: if useRowHeadings is true, there should be 1 extra column
+        let totalCols = numCols;
+        if(useRowHeadings == true) {
+            totalCols++;
+        }
         if(useFooter == true) {
-            tableFooter = <tfoot><tr><td colspan={ numCols }>{ dataFooter }</td></tr></tfoot>
+            tableFooter = <tfoot><tr><td colspan={ totalCols }>{ dataFooter }</td></tr></tfoot>
         }
         return (
             <table className={ className }>
                 { tableCaption }
+                { tableHead }
                 { tableBody }
                 { tableFooter }
             </table>
