@@ -174,7 +174,7 @@ registerBlockType("cgb/a11y-table", {
 			// If there is no table head, take rowCounter back down to 0, because Table Body has to increment it before output
 			rowCounter--;
 		}
-        // Table Body
+		// Table Body
 		let tableBody, formClass = '', tableBodyData = dataBody
 		.map(function(rows, rowIndex) {
 			rowCounter++;
