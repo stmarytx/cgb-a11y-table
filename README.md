@@ -1,0 +1,1 @@
+A WordPress plugin that creates a table block with the ability to add caption, footer, and &lt;th&gt;s with scope for improved accessibility. A full tutorial for creating this block is available at https://sites.stmarytx.edu/webelaine/2019/05/20/gutenberg-building-a-more-accessible-table-block/
